@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'routes_name.dart';
+import '../../screens/onboarding/language_selection/screen/language_selection_screen.dart';
+import '../../screens/auth/login/screen/login_screen.dart';
+import '../../screens/main/home/screen/home_screen.dart';
 
 class AppRoutes {
   static Map<String, WidgetBuilder> get routes => {
-  
+    Routes.languageSelection: (context) => const LanguageSelectionScreen(),
+    Routes.login: (context) => const LoginScreen(),
+    Routes.home: (context) => const HomeScreen(),
   };
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {

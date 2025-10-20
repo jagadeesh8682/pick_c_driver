@@ -1,8 +1,8 @@
 class AppUrl {
-  static const String baseUrl = 'http://api.pickcargo.in/api';
+  static const String baseUrl = 'http://api.pickcargo.in/api/';
   static const String webApiAddress = 'http://api.pickcargo.in/';
 
-  // Authentication
+  // Customer Authentication
   static const String login = '/master/customer/login';
   static const String logout = 'master/customer/logout';
   static const String userDetails = 'master/customer/{mobile}';
@@ -18,6 +18,40 @@ class AppUrl {
   static const String validateYourPwd =
       'master/customer/checkCustomerPassword/{mobile}/{password}';
 
+  // Driver Authentication & Activity
+  static const String driverLogin = 'operation/driveractivity/login';
+  static const String driverLogout = 'operation/driveractivity/logout';
+  static const String verifyDriverOtp =
+      'operation/driveractivity/checkOTP/{bno}/{otp}';
+  static const String saveDriverDeviceId = 'master/driver/deviceid';
+
+  // Driver Booking Management
+  static const String acceptBooking = 'operation/driveractivity/{bno}/{vno}';
+  static const String rejectBooking = 'operation/booking/Reject';
+  static const String getDriverBookingInfo = 'master/customer/booking/{bno}';
+  static const String getAllNotifications = 'operation/booking/driver';
+  static const String updateDriverBusyStatus =
+      'operation/booking/UpdateDriverBusyStatus';
+
+  // Driver Trip Management
+  static const String startPickupTrip =
+      'operation/booking/PickupTripStartbyBookingNo/{bno}';
+  static const String reachedPickupLocation =
+      'operation/booking/pickupreachdatetime';
+  static const String startTrip = 'operation/trip/start';
+  static const String cancelTrip = 'operation/booking/cancel';
+  static const String reachedDeliveryLocation =
+      'operation/booking/destinationreachdatetime';
+  static const String tripEnd = 'operation/trip/end';
+  static const String paymentReceived =
+      'operation/booking/DriverReceivedConfirm/{bno}';
+
+  // Driver Location & Status
+  static const String updateDriverLocation =
+      'operation/driveractivity/UpdateDriverCurrentLocation/{acc}/{bear}/';
+  static const String updateDriverDutyStatus =
+      'operation/driveractivity/dutystatus/{status}/{isitrd}/{tripId}';
+
   // Vehicle & Cargo
   static const String getVehicleTypes = 'master/customer/vehicleGroupList';
   static const String getOpenClosed = 'master/customer/vehicleTypeList';
@@ -26,10 +60,11 @@ class AppUrl {
   static const String selectedRateCard =
       'master/rateCard/{closedOpenId}/{truckId}';
 
-  // Booking
+  // Customer Booking
   static const String bookingHistory =
       '/master/customer/bookingHistoryListbyCustomerMobileNo/{mobile}';
-  static const String getBookingInfo = 'master/customer/booking/{bookingno}';
+  static const String getCustomerBookingInfo =
+      'master/customer/booking/{bookingno}';
   static const String confirmBooking = 'master/customer/bookingSave';
   static const String cancelBooking = 'master/customer/cancelBooking';
   static const String getTripEstimate = 'master/customer/tripEstimate';
@@ -37,7 +72,7 @@ class AppUrl {
   static const String hasCustomerDuePayment =
       'master/customer/customerPaymentsIsPaidCheck';
 
-  // Driver
+  // Customer Driver Information
   static const String getConfirmedDriverDetails =
       'master/customer/isConfirm/{bno}';
   static const String driverCurLatLngPickup =
