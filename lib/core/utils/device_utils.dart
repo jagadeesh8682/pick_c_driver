@@ -1,11 +1,28 @@
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'fcm_service.dart';
 
 class DeviceUtils {
   static const String _deviceIdKey = 'device_id';
 
-  /// Get or generate a unique device ID
+  /// Get device ID - tries FCM token first, falls back to generated ID
   static Future<String> getDeviceId() async {
+    try {
+      // First try to get FCM token (preferred for push notifications)
+      final fcmToken = await FCMService.getFCMToken();
+      if (fcmToken != null && fcmToken.isNotEmpty) {
+        return fcmToken;
+      }
+    } catch (e) {
+      print('Error getting FCM token, falling back to generated ID: $e');
+    }
+
+    // Fallback to generated device ID
+    return await _getGeneratedDeviceId();
+  }
+
+  /// Get or generate a unique device ID (legacy method)
+  static Future<String> _getGeneratedDeviceId() async {
     try {
       // First try to get stored device ID
       final prefs = await SharedPreferences.getInstance();

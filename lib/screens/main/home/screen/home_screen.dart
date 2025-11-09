@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../provider/home_provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -46,166 +47,81 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildMapView() {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      color: Colors.grey[200],
-      child: Stack(
-        children: [
-          // Map Placeholder
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.map, size: 120, color: Colors.grey[400]),
-                const SizedBox(height: 16),
-                Text(
-                  'Map View',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Google Maps integration will be added here',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[500]),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
+    return Consumer<HomeProvider>(
+      builder: (context, homeProvider, child) {
+        // Ensure we always have a camera position
+        final cameraPosition =
+            homeProvider.initialCameraPosition ??
+            const CameraPosition(
+              target: LatLng(17.3850, 78.4867), // Hyderabad default
+              zoom: 12.0,
+            );
 
-          // Location Markers (Mock)
-          _buildLocationMarkers(),
-
-          // Google Logo
-          Positioned(
-            bottom: 80,
-            left: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(4),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Text(
-                'Google',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                ),
+        return Stack(
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: double.infinity,
+              child: GoogleMap(
+                initialCameraPosition: cameraPosition,
+                onMapCreated: (GoogleMapController controller) {
+                  homeProvider.onMapCreated(controller);
+                  print('✅ GoogleMap created successfully');
+                  print(
+                    '✅ Camera position: ${cameraPosition.target.latitude}, ${cameraPosition.target.longitude}',
+                  );
+                  print('✅ Zoom level: ${cameraPosition.zoom}');
+                },
+                markers: homeProvider.markers,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: false, // We'll use custom button
+                zoomControlsEnabled: false, // We'll use custom controls
+                mapType: MapType.normal,
+                compassEnabled: true,
+                rotateGesturesEnabled: true,
+                scrollGesturesEnabled: true,
+                tiltGesturesEnabled: true,
+                zoomGesturesEnabled: true,
+                onTap: (LatLng position) {
+                  print(
+                    'Map tapped at: ${position.latitude}, ${position.longitude}',
+                  );
+                },
+                onCameraMove: (CameraPosition position) {
+                  // Map is interactive, so it's working
+                },
+                onCameraIdle: () {
+                  print('✅ Map camera idle - map is fully loaded');
+                },
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLocationMarkers() {
-    return Stack(
-      children: [
-        // Heart Cup Coffee
-        Positioned(
-          top: 200,
-          left: 100,
-          child: _buildLocationMarker(
-            'Heart Cup Coffee, Kondapur',
-            Icons.local_cafe,
-            Colors.brown,
-          ),
-        ),
-
-        // TCS Kohinoor Park
-        Positioned(
-          top: 300,
-          right: 80,
-          child: _buildLocationMarker(
-            'TCS Kohinoor Park',
-            Icons.location_on,
-            Colors.red,
-          ),
-        ),
-
-        // WeWork Krishe Emerald
-        Positioned(
-          top: 150,
-          right: 120,
-          child: _buildLocationMarker(
-            'WeWork Krishe Emerald - Coworking',
-            Icons.location_on,
-            Colors.red,
-          ),
-        ),
-
-        // Trendset Elevate
-        Positioned(
-          bottom: 200,
-          left: 80,
-          child: _buildLocationMarker(
-            'Trendset Elevate',
-            Icons.location_on,
-            Colors.red,
-          ),
-        ),
-
-        // Blue radius circle
-        Positioned(
-          top: 250,
-          left: 150,
-          child: Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.2),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.blue.withOpacity(0.5), width: 2),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLocationMarker(String title, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 16),
-          const SizedBox(width: 4),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.black,
-            ),
-          ),
-        ],
-      ),
+            // Show loading overlay if still loading
+            if (homeProvider.isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.3),
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+            // Show error message if there's an error
+            if (homeProvider.errorMessage != null)
+              Positioned(
+                top: 100,
+                left: 16,
+                right: 16,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    homeProvider.errorMessage!,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -325,23 +241,38 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(
-                        onTap: () {
-                          homeProvider.toggleDutyStatus();
-                          // Show feedback to user
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                homeProvider.isOnDuty
-                                    ? 'You are now On Duty'
-                                    : 'You are now Off Duty',
+                        onTap: () async {
+                          await homeProvider.toggleDutyStatus();
+
+                          // Show feedback based on result
+                          if (homeProvider.errorMessage == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  homeProvider.isOnDuty
+                                      ? 'You are now On Duty'
+                                      : 'You are now Off Duty',
+                                ),
+                                backgroundColor: homeProvider.isOnDuty
+                                    ? Colors.green
+                                    : Colors.red,
+                                duration: const Duration(seconds: 2),
+                                behavior: SnackBarBehavior.floating,
                               ),
-                              backgroundColor: homeProvider.isOnDuty
-                                  ? Colors.green
-                                  : Colors.red,
-                              duration: const Duration(seconds: 2),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  homeProvider.errorMessage ??
+                                      'Failed to update duty status',
+                                ),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 3),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
                         },
                         child: Container(
                           width: 24,
@@ -399,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: IconButton(
               icon: const Icon(Icons.my_location, color: Colors.black),
               onPressed: () {
-                // TODO: Center map on current location
+                context.read<HomeProvider>().centerMapOnLocation();
               },
             ),
           ),

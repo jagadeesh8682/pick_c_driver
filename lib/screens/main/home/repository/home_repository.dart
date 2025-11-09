@@ -1,19 +1,29 @@
+import '../../../../core/network/network_service.dart';
+import '../../../../core/utils/location_service.dart';
+import '../../../../core/data/repositories/driver_repository.dart';
+
 class HomeRepository {
+  final DriverRepository _driverRepository;
+
+  HomeRepository({
+    required NetworkService networkService,
+    DriverRepository? driverRepository,
+  }) : _driverRepository =
+           driverRepository ?? DriverRepository(networkService: networkService);
+
   Future<Map<String, dynamic>> getCurrentLocation() async {
     try {
-      // TODO: Replace with actual location service
-      // This would typically use geolocator package
-      // final position = await Geolocator.getCurrentPosition();
-
-      // Mock response for now
-      await Future.delayed(const Duration(milliseconds: 500));
+      final position = await LocationService.getCurrentPosition();
+      if (position == null) {
+        throw Exception('Unable to get current location');
+      }
 
       return {
         'success': true,
         'data': {
-          'latitude': 17.3850,
-          'longitude': 78.4867,
-          'accuracy': 10.0,
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+          'accuracy': position.accuracy,
           'timestamp': DateTime.now().toIso8601String(),
         },
       };
@@ -24,27 +34,53 @@ class HomeRepository {
 
   Future<Map<String, dynamic>> updateDutyStatus({
     required bool isOnDuty,
+    required bool isInTrip,
+    String tripId = '',
   }) async {
     try {
-      // TODO: Replace with actual API call
-      // final response = await _apiService.post('/driver/duty-status', {
-      //   'isOnDuty': isOnDuty,
-      // });
-      // return response.data;
-
-      // Mock response for now
-      await Future.delayed(const Duration(milliseconds: 500));
+      final response = await _driverRepository.updateDriverDutyStatus(
+        status: isOnDuty, // true = ON Duty, false = OFF Duty
+        isitrd: isInTrip, // true = In Trip, false = Not In Trip
+        tripId: tripId.isEmpty ? '' : tripId,
+      );
 
       return {
         'success': true,
-        'message': isOnDuty ? 'You are now on duty' : 'You are now off duty',
+        'message': response,
         'data': {
           'isOnDuty': isOnDuty,
+          'isInTrip': isInTrip,
+          'tripId': tripId,
           'updatedAt': DateTime.now().toIso8601String(),
         },
       };
     } catch (e) {
       throw Exception('Failed to update duty status: ${e.toString()}');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateDriverLocation({
+    String accuracy = '10.0',
+    String bearing = '0.0',
+  }) async {
+    try {
+      final response = await _driverRepository.updateDriverLocation(
+        accuracy: accuracy,
+        bearing: bearing,
+      );
+
+      return {'success': true, 'message': response.status};
+    } catch (e) {
+      throw Exception('Failed to update location: ${e.toString()}');
+    }
+  }
+
+  Future<List<dynamic>> getAllNotifications() async {
+    try {
+      final bookings = await _driverRepository.getAllNotifications();
+      return bookings.map((b) => b.toJson()).toList();
+    } catch (e) {
+      throw Exception('Failed to get notifications: ${e.toString()}');
     }
   }
 
@@ -121,16 +157,7 @@ class HomeRepository {
 
   Future<Map<String, dynamic>> logout() async {
     try {
-      // TODO: Replace with actual API call
-      // await _apiService.post('/auth/logout');
-
-      // Clear local storage
-      // await _storageService.remove('auth_token');
-      // await _storageService.remove('driver_data');
-
-      // Mock response for now
-      await Future.delayed(const Duration(milliseconds: 500));
-
+      await _driverRepository.logout();
       return {'success': true, 'message': 'Logged out successfully'};
     } catch (e) {
       throw Exception('Logout failed: ${e.toString()}');

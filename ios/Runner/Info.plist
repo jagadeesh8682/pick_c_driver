@@ -45,5 +45,13 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to your location to track your position as a driver, send your location during trips, and help customers locate you.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs access to your location in the background to update your position while you are on duty and actively driving.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs access to your location to track your position as a driver and update your location in real-time for trip management.</string>
+	<key>GMSApiKey</key>
+	<string>AIzaSyAcv7D6zbckc22vXM8fK1zmzZ2gObE5RWE</string>
 </dict>
 </plist>

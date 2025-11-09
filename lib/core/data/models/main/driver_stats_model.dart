@@ -61,3 +61,5 @@ class DriverStats {
   double get cancellationRate => totalTrips > 0 ? (cancelledTrips / totalTrips) * 100 : 0.0;
   double get averageEarningsPerTrip => completedTrips > 0 ? totalEarnings / completedTrips : 0.0;
 }
+
+

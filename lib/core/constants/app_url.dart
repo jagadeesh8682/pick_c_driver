@@ -50,7 +50,7 @@ class AppUrl {
   static const String updateDriverLocation =
       'operation/driveractivity/UpdateDriverCurrentLocation/{acc}/{bear}/';
   static const String updateDriverDutyStatus =
-      'operation/driveractivity/dutystatus/{status}/{isitrd}/{tripId}';
+      'operation/driveractivity/dutystatus';
 
   // Vehicle & Cargo
   static const String getVehicleTypes = 'master/customer/vehicleGroupList';

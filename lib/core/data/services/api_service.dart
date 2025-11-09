@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:dio/dio.dart';
 
 import '../../constants/app_url.dart';
@@ -10,14 +8,6 @@ class ApiService {
   ApiService._internal();
 
   late Dio _dio;
-
-  void _ensureInitialized() {
-    try {
-      _dio;
-    } catch (e) {
-      initialize();
-    }
-  }
 
   void initialize() {
     _dio = Dio(
@@ -42,33 +32,5 @@ class ApiService {
         },
       ),
     );
-  }
-
-  // Authentication APIs
-
-  // Error handling
-  String _handleError(dynamic error) {
-    if (error is DioException) {
-      switch (error.type) {
-        case DioExceptionType.connectionTimeout:
-        case DioExceptionType.sendTimeout:
-        case DioExceptionType.receiveTimeout:
-          return 'Connection timeout. Please check your internet connection.';
-        case DioExceptionType.badResponse:
-          final statusCode = error.response?.statusCode;
-          final message =
-              error.response?.data?['message'] ?? 'Server error occurred';
-          return 'Error $statusCode: $message';
-        case DioExceptionType.cancel:
-          return 'Request was cancelled';
-        case DioExceptionType.connectionError:
-          return 'No internet connection. Please check your network.';
-        case DioExceptionType.badCertificate:
-          return 'Certificate error occurred';
-        case DioExceptionType.unknown:
-          return 'An unexpected error occurred';
-      }
-    }
-    return error.toString();
   }
 }

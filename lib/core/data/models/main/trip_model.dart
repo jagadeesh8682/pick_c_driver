@@ -124,3 +124,5 @@ class Trip {
   bool get isCancelled => status == 'cancelled';
   bool get isPending => status == 'pending';
 }
+
+

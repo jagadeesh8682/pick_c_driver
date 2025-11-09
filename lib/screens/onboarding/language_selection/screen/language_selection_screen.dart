@@ -62,31 +62,48 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   }
 
   Widget _buildClouds() {
-    return Positioned(
-      top: 50,
-      child: Row(
-        children: [
-          _buildCloud(80, 20),
-          const SizedBox(width: 100),
-          _buildCloud(60, 40),
-          const SizedBox(width: 80),
-          _buildCloud(70, 30),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCloud(double width, double top) {
-    return Positioned(
-      top: top,
-      child: Container(
-        width: width,
-        height: 30,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(20),
+    return Stack(
+      children: [
+        // First cloud
+        Positioned(
+          top: 70,
+          left: 20,
+          child: Container(
+            width: 80,
+            height: 30,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
         ),
-      ),
+        // Second cloud
+        Positioned(
+          top: 90,
+          left: 120,
+          child: Container(
+            width: 60,
+            height: 30,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ),
+        // Third cloud
+        Positioned(
+          top: 80,
+          left: 200,
+          child: Container(
+            width: 70,
+            height: 30,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'routes_name.dart';
 import '../../screens/onboarding/language_selection/screen/language_selection_screen.dart';
 import '../../screens/auth/login/screen/login_screen.dart';

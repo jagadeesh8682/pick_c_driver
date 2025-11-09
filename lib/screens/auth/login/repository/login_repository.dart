@@ -1,14 +1,22 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/network_service.dart';
 import '../../../../core/constants/app_url.dart';
 import '../../../../core/utils/location_service.dart';
+import '../../../../core/utils/device_utils.dart';
+import '../../../../core/data/repositories/driver_repository.dart';
 
 class LoginRepository {
   final NetworkService _networkService;
+  final DriverRepository _driverRepository;
 
-  LoginRepository({required NetworkService networkService})
-    : _networkService = networkService;
+  LoginRepository({
+    required NetworkService networkService,
+    DriverRepository? driverRepository,
+  }) : _networkService = networkService,
+       _driverRepository =
+           driverRepository ?? DriverRepository(networkService: networkService);
 
   Future<Map<String, dynamic>> login({
     required String driverId,
@@ -40,12 +48,12 @@ class LoginRepository {
       final dynamic response = await _networkService
           .getPostApiResponseUnauthenticated(url, payload);
 
-      // Response could be JSON with token field or a raw string. Handle both.
+      // Extract token from response
       String? token;
       if (response is Map) {
         // Common cases: { token: "..." } or nested under data
-        if (response['token'] is String) {
-          token = response['token'] as String;
+        if (response['token']  != null) {
+          token = response['token'];
         } else if (response['data'] is Map &&
             (response['data']['token'] is String)) {
           token = response['data']['token'] as String;
@@ -71,11 +79,22 @@ class LoginRepository {
         throw Exception('Token not found in response');
       }
 
-      // Persist token
+      // Persist token and driver ID
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token);
+      await prefs.setString('driver_id', driverId);
+      await prefs.reload();
 
-      return {'success': true, 'token': token};
+      // Save device ID for push notifications (non-blocking)
+      final tokenForDeviceId = token; // Store in local variable
+      Future.delayed(const Duration(milliseconds: 300), () {
+        _saveDeviceIdAfterLogin(driverId, tokenForDeviceId).catchError((error) {
+          // Log error but don't fail login if device ID save fails
+          developer.log('Failed to save device ID after login: $error');
+        });
+      });
+
+      return {'success': true, 'token': token, 'driverId': driverId};
     } catch (e) {
       throw Exception('Login failed: ${e.toString()}');
     }
@@ -111,12 +130,14 @@ class LoginRepository {
 
   Future<void> logout() async {
     try {
-      // TODO: Replace with actual API call
-      // await _apiService.post('/auth/logout');
+      final String url = AppUrl.baseUrl + AppUrl.driverLogout;
+      await _networkService.getGetApiResponse(url);
 
       // Clear local storage
-      // await _storageService.remove('auth_token');
-      // await _storageService.remove('driver_data');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('token');
+      await prefs.remove('driver_id');
+      await prefs.remove('driver_data');
     } catch (e) {
       throw Exception('Logout failed: ${e.toString()}');
     }
@@ -158,6 +179,65 @@ class LoginRepository {
       };
     } catch (e) {
       throw Exception('Token refresh failed: ${e.toString()}');
+    }
+  }
+
+  /// Save device ID after successful login (called asynchronously)
+  Future<void> _saveDeviceIdAfterLogin(String driverId, String token) async {
+    try {
+      // Ensure token is saved to SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getString('token') != token) {
+        await prefs.setString('token', token);
+        await prefs.reload();
+      }
+
+      // Get device ID and save to server
+      final deviceId = await DeviceUtils.getDeviceId();
+      final result = await _driverRepository.saveDeviceId(
+        driverId: driverId,
+        deviceId: deviceId,
+        authToken: token,
+      );
+
+      // Log result
+      if (result['success'] == true) {
+        developer.log('✅ Device ID saved successfully: ${result['message']}');
+      } else {
+        developer.log('❌ Device ID save failed: ${result['message']}');
+      }
+    } catch (e) {
+      // Device ID save failure shouldn't block login
+      developer.log('❌ Failed to save device ID: $e');
+
+      // Retry once after delay
+      try {
+        await Future.delayed(const Duration(seconds: 2));
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.reload();
+        final retryToken = prefs.getString('token');
+
+        if (retryToken != null && retryToken.isNotEmpty) {
+          final deviceId = await DeviceUtils.getDeviceId();
+          final retryResult = await _driverRepository.saveDeviceId(
+            driverId: driverId,
+            deviceId: deviceId,
+            authToken: retryToken,
+          );
+
+          if (retryResult['success'] == true) {
+            developer.log(
+              '✅ Device ID saved successfully on retry: ${retryResult['message']}',
+            );
+          } else {
+            developer.log(
+              '❌ Device ID save failed on retry: ${retryResult['message']}',
+            );
+          }
+        }
+      } catch (retryError) {
+        developer.log('❌ Device ID save retry failed: $retryError');
+      }
     }
   }
 }
